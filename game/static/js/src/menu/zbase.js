@@ -51,37 +51,4 @@ class AcGameMenu {
     hide() {  // close menu
         this.$menu.hide();
     }
-}class AcGamePlayground {
-    constructor(root) {
-        this.root = root;
-        this.$playground = $(`<div>game start!</div>`);
-
-        this.hide();
-        this.root.$ac_game.append(this.$playground);
-
-        this.start();
-    }
-
-    start() {
-    }
-
-    show() {  // show playground
-        this.$playground.show();
-    }
-
-    hide() {  // close playground
-        this.$playground.hide();
-    }
-}class AcGame {
-    constructor(id) {
-        this.id = id;
-        this.$ac_game = $('#' + id);
-        this.menu = new AcGameMenu(this);
-        this.playground = new AcGamePlayground(this);
-
-        this.start();
-    }
-
-    start() {
-    }
 }

@@ -7,13 +7,11 @@
     <script src="{% static 'js/dist/game.js' %}"></script>
 </head>
 
-<body style="margin:0">
-    <div id="game_1"></div>
+<body style="margin: 0">
+    <div id="ac_game_12345678"></div>
     <script>
         $(document).ready(function(){
-            let ac_gome = AcGame("game_1");
+            let ac_game = new AcGame("ac_game_12345678");
         });
     </script>
-
-
 </body>

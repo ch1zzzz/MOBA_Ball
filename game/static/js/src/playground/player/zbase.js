@@ -66,8 +66,6 @@ class Player extends AcGameObject {
     }
 
     shoot_fireball(tx, ty) {
-        console.log(tx, ty); // 测试用
-        // 以下部分在测试成功之后再写入
         let x = this.x, y = this.y;
         let radius = this.playground.height * 0.01; // 半径
         let color = "orange"; // 颜色
@@ -102,8 +100,9 @@ class Player extends AcGameObject {
             let vx = Math.cos(angle), vy = Math.sin(angle);
             let color = this.color;
             let speed = this.speed * 10;
-            let move_length = this.radius * Math.random() * 5;
+            let move_length = this.radius * Math.random() * 10;
             new Particle(this.playground, x, y, radius, vx, vy, color, speed, move_length);
+            console.log("new p!!!!!!!")
         }
         this.radius -= damage;
         if (this.radius < 10) {
@@ -118,13 +117,15 @@ class Player extends AcGameObject {
 
     update() {
         this.spent_time += this.timedelta / 1000;
-        if (!this.is_me && this.spent_time > 4 && Math.random() < 1 / 300.0) {
+        //AI
+        if (!this.is_me && this.spent_time > 4 && Math.random() < 1 / 150.0) {
             let player = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
             let tx = player.x + player.speed * this.vx * this.timedelta / 1000 * 0.3;
             let ty = player.y + player.speed * this.vy * this.timedelta / 1000 * 0.3;
             this.shoot_fireball(tx, ty);
         }
 
+        // was attacked
         if (this.damage_speed > 10) {
             this.vx = this.vy = 0;
             this.move_length = 0;
@@ -132,6 +133,7 @@ class Player extends AcGameObject {
             this.y += this.damage_y * this.damage_speed * this.timedelta / 1000;
             this.damage_speed *= this.friction;
         } else {
+            //regular move
             if (this.move_length < this.eps) {
                 this.move_length = 0;
                 this.vx = this.vy = 0;

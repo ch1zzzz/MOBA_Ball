@@ -163,35 +163,35 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         this.speed = speed;
         this.move_length = move_length;
         this.friction = 0.9;
-        this.eps = 0.01;
+        this.eps = 3;
     }
 
     start() {
+
     }
 
     update() {
-        if (this.move_length < this.eps || this.speed < this.eps) {
+        if(this.move_length < this.eps || this.speed < this.eps) {
             this.destroy();
             return false;
         }
 
-        let moved = Math.min(this.move_length, this.speed * this.timedelta / 1000);
-        this.x += this.vx * moved;
-        this.y += this.vy * moved;
-        this.speed *= this.friction;
+        let moved = Math.min(this.move_length, this.speed*this.timedelta/1000);
+        this.x += this.vx*moved;
+        this.y += this.vy*moved;
         this.move_length -= moved;
+        this.speed *= this.friction;
         this.render();
     }
 
     render() {
-        let scale = this.playground.scale;
         this.ctx.beginPath();
-        this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
+        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, false);
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
     }
-}
-class Player extends AcGameObject {
+
+}class Player extends AcGameObject {
     constructor(playground, x, y, radius, color, speed, is_me) {
         super();
         this.playground = playground;
@@ -259,8 +259,6 @@ class Player extends AcGameObject {
     }
 
     shoot_fireball(tx, ty) {
-        console.log(tx, ty); // 测试用
-        // 以下部分在测试成功之后再写入
         let x = this.x, y = this.y;
         let radius = this.playground.height * 0.01; // 半径
         let color = "orange"; // 颜色
@@ -295,8 +293,9 @@ class Player extends AcGameObject {
             let vx = Math.cos(angle), vy = Math.sin(angle);
             let color = this.color;
             let speed = this.speed * 10;
-            let move_length = this.radius * Math.random() * 5;
+            let move_length = this.radius * Math.random() * 10;
             new Particle(this.playground, x, y, radius, vx, vy, color, speed, move_length);
+            console.log("new p!!!!!!!")
         }
         this.radius -= damage;
         if (this.radius < 10) {
@@ -311,13 +310,15 @@ class Player extends AcGameObject {
 
     update() {
         this.spent_time += this.timedelta / 1000;
-        if (!this.is_me && this.spent_time > 4 && Math.random() < 1 / 300.0) {
+        //AI
+        if (!this.is_me && this.spent_time > 4 && Math.random() < 1 / 150.0) {
             let player = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
             let tx = player.x + player.speed * this.vx * this.timedelta / 1000 * 0.3;
             let ty = player.y + player.speed * this.vy * this.timedelta / 1000 * 0.3;
             this.shoot_fireball(tx, ty);
         }
 
+        // was attacked
         if (this.damage_speed > 10) {
             this.vx = this.vy = 0;
             this.move_length = 0;
@@ -325,6 +326,7 @@ class Player extends AcGameObject {
             this.y += this.damage_y * this.damage_speed * this.timedelta / 1000;
             this.damage_speed *= this.friction;
         } else {
+            //regular move
             if (this.move_length < this.eps) {
                 this.move_length = 0;
                 this.vx = this.vy = 0;
@@ -455,17 +457,18 @@ class AcGamePlayground {
         this.fireballs = []; // list of fireballs
         //Player for me 
         this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "white", this.height * 0.15, true));
+        //Players for AI
         for (let i = 0; i < 5; ++ i){
-            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "green", this.height * 0.15, false));    
+            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, this.get_random_color(), this.height * 0.15, false));    
         }
         //this.$back = this.$playground.find('.ac-game-playground-item-back')
         this.start();
     }
 
-    // get_random_color() {
-    //     let colors = ["blue", "red", "pink", "grey", "green"];
-    //     return colors[Math.floor(Math.random() * 5)];
-    // }
+    get_random_color() {
+        let colors = ["blue", "red", "pink", "grey", "green", "yellow", "purple"];
+        return colors[Math.floor(Math.random() * 7)];
+    }
 
 
     // add_listening_events()

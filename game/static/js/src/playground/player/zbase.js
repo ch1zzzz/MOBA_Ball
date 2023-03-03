@@ -22,6 +22,14 @@ class Player extends AcGameObject {
         this.cur_skill = null;
         this.fireballs = [];
         this.unbinded_funcs = []
+
+        if (this.is_me) {
+            this.img = new Image();
+            this.img.src = this.playground.root.settings.photo;
+        }else{
+            this.img = new Image();
+            this.img.src = "https://app4881.acapp.acwing.com.cn/static/image/settings/cat.png";
+        }
     }
 
     start() {
@@ -101,7 +109,6 @@ class Player extends AcGameObject {
             let speed = this.speed * 10;
             let move_length = this.radius * Math.random() * 10;
             new Particle(this.playground, x, y, radius, vx, vy, color, speed, move_length);
-            console.log("new p!!!!!!!")
         }
         this.radius -= damage;
         if (this.radius < 10) {
@@ -152,10 +159,28 @@ class Player extends AcGameObject {
     }
 
     render() {
-        this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-        this.ctx.fillStyle = this.color;
-        this.ctx.fill();
+        if (this.is_me) {
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.stroke();
+            this.ctx.clip();
+            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2); 
+            this.ctx.restore();
+        }else{
+            // for colored circle
+            // this.ctx.beginPath();
+            // this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            // this.ctx.fillStyle = this.color;
+            // this.ctx.fill();
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.stroke();
+            this.ctx.clip();
+            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2); 
+            this.ctx.restore();
+        }
     }
 
     on_destroy() {

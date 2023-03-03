@@ -104,6 +104,7 @@ class Settings {
         this.$register_login = this.$register.find(".ac-game-settings-option");
         this.$register.hide();
 
+        this.$acwing_login = this.$settings.find('.ac-game-settings-wechat img');
 
         this.root.$ac_game.append(this.$settings);
         this.start();
@@ -115,8 +116,12 @@ class Settings {
     }
 
     add_listening_events() {
+        let outer = this;
         this.add_listening_events_login();
         this.add_listening_events_register();
+        this.$acwing_login.click(function() {
+            outer.acwing_login();
+        });
     }
 
     add_listening_events_login() {
@@ -136,6 +141,19 @@ class Settings {
         });
         this.$register_subtmit.click(function() {
             outer.register_remote();
+        });
+    }
+
+    acwing_login() {
+        $.ajax({
+            url: 'https://app4881.acapp.acwing.com.cn/settings/acwing/web/apply_code/',
+            type: 'GET',
+            success: function(resp) {
+                if(resp.result === 'success') {
+                    // redirect
+                    window.location.replace(resp.apply_code_url);
+                }
+            }
         });
     }
 
@@ -222,7 +240,6 @@ class Settings {
                 platform: outer.platform,
             },
             success: function(resp) {
-                console.log(resp);
                 if(resp.result === 'success') {
                     outer.username = resp.username;
                     outer.photo = resp.photo;

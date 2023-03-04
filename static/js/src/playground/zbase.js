@@ -45,22 +45,33 @@ class AcGamePlayground {
         //this.add_listening_events();
     }
 
-    show() {  // show playground
+    show(mode) {  // show playground
+        let outer = this;
         this.$playground.show();
-        this.resize();
         
         this.width = this.$playground.width();
         this.height = this.$playground.height();
 
         this.game_map = new GameMap(this); // map
+        this.resize();
+
         this.players = []; // list of players
         this.fireballs = []; // list of fireballs
         //Player for me 
-        this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, true));
+        this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, 'me', this.root.settings.username, this.root.settings.photo));
         //Players for AI
-        for (let i = 0; i < 5; ++ i){
-            this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, false));    
+        if(mode === 'single mode') {
+            for (let i = 0; i < 5; ++ i){
+                this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, 'robot'));    
+            }
+        }else if(mode === 'multi mode') {
+            this.mps = new MultiPlayerSocket(this);
+            this.mps.uuid = this.players[0].uuid;
+            this.mps.ws.onopen = function() {
+                outer.mps.send_create_player(outer.root.settings.username, outer.root.settings.photo);
+            };
         }
+        
         //this.$back = this.$playground.find('.ac-game-playground-item-back')
     }
 

@@ -10,6 +10,19 @@ class AcGameObject {
         // time interval from last frame(we render the web each frame)
         this.timedelta = 0;  
         //if the obj can be hurt --default false
+
+        this.uuid = this.create_uuid();
+
+        console.log(this.uuid);
+    }
+
+    create_uuid() {
+        let res = '';
+        for(let i = 0; i < 15; i++) {
+            let x = parseInt(Math.floor(Math.random() * 10));
+            res += x;
+        }
+        return res;
     }
 
     start()

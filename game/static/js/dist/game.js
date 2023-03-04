@@ -146,6 +146,13 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
 
     }
 
+    resize() {
+        this.ctx.canvas.width = this.playground.width;
+        this.ctx.canvas.height = this.playground.height;
+        this.ctx.fillStyle = "rgba(0, 0, 0, 1)"; // background color(default black)
+        this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height); // paint rectangle
+    }
+
     update()
     {
         this.render();
@@ -165,7 +172,7 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         this.speed = speed;
         this.move_length = move_length;
         this.friction = 0.9;
-        this.eps = 3;
+        this.eps = 0.01;
     }
 
     start() {
@@ -187,8 +194,9 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
     }
 
     render() {
+        let scale = this.playground.scale;
         this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, false);
+        this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI*2, false);
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
     }
@@ -210,7 +218,7 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         this.color = color;
         this.speed = speed;
         this.is_me = is_me;
-        this.eps = 0.1;
+        this.eps = 0.01;
         this.friction = 0.9;
         this.spent_time = 0;
 
@@ -231,8 +239,8 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         if (this.is_me) {
             this.add_listening_events();
         } else {
-            let tx = Math.random() * this.playground.width;
-            let ty = Math.random() * this.playground.height;
+            let tx = Math.random() * this.playground.width / this.playground.scale;
+            let ty = Math.random() * this.playground.height / this.playground.scale;
             this.move_to(tx, ty);
         }
     }
@@ -248,11 +256,11 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
             //e.which === 3，right click
             //e.which === 1，left click
             if (e.which === 3) {
-                outer.move_to(e.clientX - rect.left, e.clientY - rect.top);
+                outer.move_to((e.clientX - rect.left) / outer.playground.scale, (e.clientY - rect.top) / outer.playground.scale);
 
             }else if(e.which === 1) {
                 if(outer.cur_skill === "fireball") {
-                    outer.shoot_fireball(e.clientX - rect.left, e.clientY - rect.top);
+                    outer.shoot_fireball((e.clientX - rect.left) / outer.playground.scale, (e.clientY - rect.top) / outer.playground.scale);
                 }
                 outer.cur_skill = null;
             }
@@ -269,14 +277,14 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
 
     shoot_fireball(tx, ty) {
         let x = this.x, y = this.y;
-        let radius = this.playground.height * 0.01;
+        let radius = 0.01;
         let color = "orange";
-        let damage = this.playground.height * 0.01;
+        let damage = 0.01;
 
         let angle = Math.atan2(ty - this.y, tx - this.x);
         let vx = Math.cos(angle), vy = Math.sin(angle); // direction
-        let speed = this.playground.height * 0.5; 
-        let move_dist = this.playground.height * 1;
+        let speed = 0.5; 
+        let move_dist = 1;
         let fireball = new FireBall(this.playground, this, x, y, radius, vx, vy, color, speed, move_dist, damage);
         this.fireballs.push(fireball);
     }
@@ -306,7 +314,7 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
             new Particle(this.playground, x, y, radius, vx, vy, color, speed, move_length);
         }
         this.radius -= damage;
-        if (this.radius < 10) {
+        if (this.radius < this.eps) {
             this.destroy();
             return false;
         }
@@ -317,6 +325,11 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
     }
 
     update() {
+        this.update_move();
+        this.render();
+    }
+
+    update_move() {
         this.spent_time += this.timedelta / 1000;
         //AI
         if (!this.is_me && this.spent_time > 4 && Math.random() < 1 / 150.0) {
@@ -327,7 +340,7 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         }
 
         // was attacked
-        if (this.damage_speed > 10) {
+        if (this.damage_speed > this.eps) {
             this.vx = this.vy = 0;
             this.move_length = 0;
             this.x += this.damage_x * this.damage_speed * this.timedelta / 1000;
@@ -339,8 +352,8 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
                 this.move_length = 0;
                 this.vx = this.vy = 0;
                 if (!this.is_me) {
-                    let tx = Math.random() * this.playground.width;
-                    let ty = Math.random() * this.playground.height;
+                    let tx = Math.random() * this.playground.width / this.playground.scale;
+                    let ty = Math.random() * this.playground.height / this.playground.scale;
                     this.move_to(tx, ty);
                 }
             } else {
@@ -350,30 +363,30 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
                 this.move_length -= moved;
             }
         }
-        this.render();
     }
 
     render() {
+        let scale = this.playground.scale;
         if (this.is_me) {
             this.ctx.save();
             this.ctx.beginPath();
-            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
             this.ctx.stroke();
             this.ctx.clip();
-            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2); 
+            this.ctx.drawImage(this.img, (this.x - this.radius) * scale, (this.y - this.radius) * scale, this.radius * 2 * scale, this.radius * 2 * scale); 
             this.ctx.restore();
         }else{
             // for colored circle
             // this.ctx.beginPath();
-            // this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            // this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
             // this.ctx.fillStyle = this.color;
             // this.ctx.fill();
             this.ctx.save();
             this.ctx.beginPath();
-            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
             this.ctx.stroke();
             this.ctx.clip();
-            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2); 
+            this.ctx.drawImage(this.img, (this.x - this.radius) * scale, (this.y - this.radius) * scale, this.radius * 2 * scale, this.radius * 2 * scale); 
             this.ctx.restore();
         }
     }
@@ -392,9 +405,9 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
     }
 }class FireBall extends AcGameObject {
 
-    // 传入参数：游戏界面、(所属)玩家、火球坐标x, y、火球横纵速度vx, vy、火球半径、颜色、移动速度、射程最大距离
+    // args：playground、player、position x, y、speed vx, vy、radius、color、s、max move length、damage
     constructor(playground, player, x, y, radius, vx, vy, color, speed, move_length, damage) {
-        // 基本属性
+        // basic attribute
         super();
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
@@ -409,7 +422,7 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         this.move_length = move_length;
         this.damage = damage;
 
-        this.eps = 0.001;
+        this.eps = 0.01;
     }
 
     start() {
@@ -427,7 +440,7 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         this.y += this.vy * moved;
         this.move_length -= moved;
 
-        // 遍历整个玩家数组，并判断火球与玩家球心距离
+        // loop player array，check distance between player and fireball
         for (let i = 0; i < this.playground.players.length; i++) {
             let player = this.playground.players[i];
             if (player !== this.player && this.is_collision(player)) {  // player 不是自己时
@@ -437,7 +450,6 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         this.render();
     }
 
-    // 球心距
     get_dist(x1, y1, x2, y2) {
         let dx = x2 - x1;
         let dy = y2 - y1;
@@ -445,7 +457,6 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    // 碰撞检测(是否击中敌人)
     is_collision(player) {
         if (this.get_dist(this.x, this.y, player.x, player.y) < this.radius + player.radius) {
             return true;
@@ -454,16 +465,17 @@ requestAnimationFrame(AC_GAME_ANIMATION);class GameMap extends AcGameObject
         }
     }
 
-    // 火球碰撞后击中敌人
+    // attack the player after collision
     attack(player) {
-        let angle = Math.atan2(player.y - this.y, player.x - this.x);  // 火球碰撞角度 y / x
+        let angle = Math.atan2(player.y - this.y, player.x - this.x);
         player.is_attacked(angle, this.damage);
         this.destroy();
     }
 
     render() {
+        let scale = this.playground.scale;
         this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+        this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, 2 * Math.PI, false);
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
     }
@@ -474,13 +486,25 @@ class AcGamePlayground {
         this.$playground = $(`<div class="ac-game-playground"></div>`);
 
         this.hide();
-        
+        this.root.$ac_game.append(this.$playground);
         this.start();
     }
 
     get_random_color() {
         let colors = ["blue", "red", "pink", "grey", "green", "yellow", "purple"];
         return colors[Math.floor(Math.random() * 7)];
+    }
+
+    resize() {
+        this.width = this.$playground.width();
+        this.height = this.$playground.height();
+        let unit = Math.min(this.width / 16, this.height / 9);
+        this.width = unit * 16;
+        this.height = unit * 9;
+        this.scale = this.height;
+        if(this.game_map){
+            this.game_map.resize();
+        }
     }
 
 
@@ -495,13 +519,18 @@ class AcGamePlayground {
 
     start()
     {
+        let outer = this;
+        $(window).resize(function() {
+            outer.resize();
+        });
         //this.hide();
         //this.add_listening_events();
     }
 
     show() {  // show playground
         this.$playground.show();
-        this.root.$ac_game.append(this.$playground);
+        this.resize();
+        
         this.width = this.$playground.width();
         this.height = this.$playground.height();
 
@@ -509,10 +538,10 @@ class AcGamePlayground {
         this.players = []; // list of players
         this.fireballs = []; // list of fireballs
         //Player for me 
-        this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "white", this.height * 0.15, true));
+        this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, true));
         //Players for AI
         for (let i = 0; i < 5; ++ i){
-            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "white", this.height * 0.15, false));    
+            this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, false));    
         }
         //this.$back = this.$playground.find('.ac-game-playground-item-back')
     }

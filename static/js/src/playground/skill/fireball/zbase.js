@@ -1,8 +1,8 @@
 class FireBall extends AcGameObject {
 
-    // 传入参数：游戏界面、(所属)玩家、火球坐标x, y、火球横纵速度vx, vy、火球半径、颜色、移动速度、射程最大距离
+    // args：playground、player、position x, y、speed vx, vy、radius、color、s、max move length、damage
     constructor(playground, player, x, y, radius, vx, vy, color, speed, move_length, damage) {
-        // 基本属性
+        // basic attribute
         super();
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
@@ -17,7 +17,7 @@ class FireBall extends AcGameObject {
         this.move_length = move_length;
         this.damage = damage;
 
-        this.eps = 0.001;
+        this.eps = 0.01;
     }
 
     start() {
@@ -35,7 +35,7 @@ class FireBall extends AcGameObject {
         this.y += this.vy * moved;
         this.move_length -= moved;
 
-        // 遍历整个玩家数组，并判断火球与玩家球心距离
+        // loop player array，check distance between player and fireball
         for (let i = 0; i < this.playground.players.length; i++) {
             let player = this.playground.players[i];
             if (player !== this.player && this.is_collision(player)) {  // player 不是自己时
@@ -45,7 +45,6 @@ class FireBall extends AcGameObject {
         this.render();
     }
 
-    // 球心距
     get_dist(x1, y1, x2, y2) {
         let dx = x2 - x1;
         let dy = y2 - y1;
@@ -53,7 +52,6 @@ class FireBall extends AcGameObject {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    // 碰撞检测(是否击中敌人)
     is_collision(player) {
         if (this.get_dist(this.x, this.y, player.x, player.y) < this.radius + player.radius) {
             return true;
@@ -62,16 +60,17 @@ class FireBall extends AcGameObject {
         }
     }
 
-    // 火球碰撞后击中敌人
+    // attack the player after collision
     attack(player) {
-        let angle = Math.atan2(player.y - this.y, player.x - this.x);  // 火球碰撞角度 y / x
+        let angle = Math.atan2(player.y - this.y, player.x - this.x);
         player.is_attacked(angle, this.damage);
         this.destroy();
     }
 
     render() {
+        let scale = this.playground.scale;
         this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+        this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, 2 * Math.PI, false);
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
     }

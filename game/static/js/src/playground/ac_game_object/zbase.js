@@ -13,7 +13,6 @@ class AcGameObject {
 
         this.uuid = this.create_uuid();
 
-        console.log(this.uuid);
     }
 
     create_uuid() {

@@ -185,16 +185,19 @@ class Settings {
     }
 
     logout_remote(){
-        if(this.platform === 'ACAPP') return false;
-        $.ajax({
-            url: 'https://app4881.acapp.acwing.com.cn/settings/logout/',
-            type: 'GET',
-            success: function(resp) {
-                if(resp.result === 'success') {
-                    location.reload();
+        if(this.platform === 'ACAPP') {
+            this.root.OS.api.window.close();
+        }else{
+            $.ajax({
+                url: 'https://app4881.acapp.acwing.com.cn/settings/logout/',
+                type: 'GET',
+                success: function(resp) {
+                    if(resp.result === 'success') {
+                        location.reload();
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     register_remote(){
@@ -237,7 +240,6 @@ class Settings {
     acapp_login(appid, redirect_uri, scope, state) {
         let outer = this;
         this.root.OS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp) {
-            console.log(resp);
             if(resp.result === 'success') {
                 outer.username = resp.username;
                 outer.photo = resp.photo;

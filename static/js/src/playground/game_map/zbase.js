@@ -5,7 +5,7 @@ class GameMap extends AcGameObject
         super(); // call AcGameObject()
 
         this.playground = playground;
-        this.$canvas = $(`<canvas></canvas>`); // Html canvas
+        this.$canvas = $(`<canvas tabindex=0></canvas>`); // Html canvas
         this.ctx = this.$canvas[0].getContext('2d'); // ctxto manipulate canvas
 
         this.ctx.canvas.width = this.playground.width; // canvas width
@@ -22,7 +22,7 @@ class GameMap extends AcGameObject
 
     start()
     {
-
+        this.$canvas.focus();
     }
 
     resize() {

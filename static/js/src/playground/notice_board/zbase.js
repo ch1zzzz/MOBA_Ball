@@ -4,7 +4,7 @@ class NoticeBoard extends AcGameObject {
 
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
-        this.text = 'Player in ready: 0, 3 players to start';
+        this.text = 'waiting for 3 players to start';
 
     }
 

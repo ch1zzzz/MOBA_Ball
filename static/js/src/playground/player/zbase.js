@@ -37,17 +37,17 @@ class Player extends AcGameObject {
         if (this.character === 'me') {
             this.fireball_coldtime = 3;
             this.fireball_img = new Image();
-            this.fireball_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_9340c86053-fireball.png";
+            this.fireball_img.src = "https://app4881.acapp.acwing.com.cn/static/image/settings/fireball.png";
         
             this.blink_coldtime = 5;
             this.blink_img = new Image();
-            this.blink_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_daccabdc53-blink.png";
+            this.blink_img.src = "https://app4881.acapp.acwing.com.cn/static/image/settings/arrows.png";
         }
     }
 
     start() {
         this.playground.player_count++;
-        this.playground.notice_board.write('Player in ready: ' + this.playground.player_count + ', 3 players to start');
+        this.playground.notice_board.write('Waiting for 3 players to start');
 
         if (this.playground.player_count >= 3) {
             this.playground.state = 'fighting';
@@ -229,11 +229,19 @@ class Player extends AcGameObject {
 
     update() {
         this.spent_time += this.timedelta / 1000;
+        this.update_win();
         if (this.character === 'me' && this.playground.state === 'fighting') {
             this.update_coldtime();
         }
         this.update_move();
         this.render();
+    }
+
+    update_win(){
+        if (this.playground.state ==='fighting' && this.character === 'me' && this.playground.players.length === 1) {
+            this.playground.state = 'over';
+            this.playground.score_board.win();
+        }
     }
 
     update_coldtime() {
@@ -353,7 +361,10 @@ class Player extends AcGameObject {
 
     on_destroy() {
         if(this.character === 'me') {
-            this.playground.state = 'over';
+            if(this.playground.state === 'fighting') {
+                this.playground.state = 'over';
+                this.playground.score_board.lose();
+            } 
         }
 
         for (let i = 0; i < this.unbinded_funcs.length; i ++) {

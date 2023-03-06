@@ -1,0 +1,11 @@
+Starting the server...
+Traceback (most recent call last):
+  File "./main.py", line 131, in <module>
+    server.serve()
+  File "/home/yqzuo/.local/lib/python3.8/site-packages/thrift/server/TServer.py", line 124, in serve
+    client = self.serverTransport.accept()
+  File "/home/yqzuo/.local/lib/python3.8/site-packages/thrift/transport/TSocket.py", line 236, in accept
+    client, addr = self.handle.accept()
+  File "/usr/lib/python3.8/socket.py", line 292, in accept
+    fd, addr = self._accept()
+KeyboardInterrupt

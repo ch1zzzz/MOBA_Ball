@@ -5,6 +5,7 @@ from game.models.player.player import Player
 from django.contrib.auth.models import User
 from django.contrib.auth import login
 from random import randint
+from rest_framework_simplejwt.tokens import RefreshToken
 import requests
 
 
@@ -41,10 +42,13 @@ def receive_code(request):
     players = Player.objects.filter(openid=openid)
     if players.exists(): # player exists
         player = players[0]
+        refresh = RefreshToken.for_user(player.user)
         return JsonResponse({
             'result': 'success',
             'username': player.user.username,
             'photo': player.photo,
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
         })
     
     #player not exists
@@ -64,8 +68,11 @@ def receive_code(request):
     user = User.objects.create(username=username)
     player = Player.objects.create(user=user, photo=photo, openid=openid)
 
+    refresh = RefreshToken.for_user(user)
     return JsonResponse({
         'result': 'success',
         'username': player.user.username,
         'photo': player.photo, 
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
     })

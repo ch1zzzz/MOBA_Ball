@@ -42,7 +42,6 @@ class AcGameMenu {
             outer.root.playground.show('multi mode');
         });
         this.$settings.click(function(){
-            console.log("click settings");
             outer.root.settings.logout_remote();
         });
     }
@@ -866,7 +865,7 @@ class MultiPlayerSocket {
     constructor(playground) {
         this.playground = playground;
 
-        this.ws = new WebSocket('wss://app4881.acapp.acwing.com.cn/wss/multiplayer/')
+        this.ws = new WebSocket('wss://app4881.acapp.acwing.com.cn/wss/multiplayer/?token=' + playground.root.access);
 
         this.start();
     }
@@ -1271,9 +1270,43 @@ class MultiPlayerSocket {
         if(this.platform ==='ACAPP') {
             this.get_info_acapp();
         }else{
-            this.getinfo_web();
+            if(this.root.access) {
+                this.getinfo_web();
+                this.refresh_jwt_token();
+            }else{
+                this.login();
+            }
             this.add_listening_events();
         }
+    }
+
+    refresh_jwt_token() {
+        setInterval(() => {
+            $.ajax({
+                url: "https://app4881.acapp.acwing.com.cn/settings/api/token/refresh/",
+                type: "post",
+                data: {
+                    refresh: this.root.refresh,
+                },
+                success: resp => {
+                    this.root.access = resp.access;
+                }
+            });
+        }, 4.5 * 60 * 1000);
+
+        setTimeout(() => {
+            $.ajax({
+                url: "https://app4881.acapp.acwing.com.cn/settings/ranklist/",
+                type: "get",
+                headers: {
+                    'Authorization': "Bearer " + this.root.access,
+                },
+                success: resp => {
+                    console.log(resp);
+                }
+            });
+        }, 5000);
+
     }
 
     add_listening_events() {
@@ -1318,25 +1351,26 @@ class MultiPlayerSocket {
         });
     }
 
-    login_remote(){
-        let outer = this;
-        let username = this.$login_username.val();
-        let password = this.$login_password.val();
+    login_remote(username, password){
+        username = username || this.$login_username.val();
+        password = password || this.$login_password.val();
         this.$login_error_message.empty();
 
         $.ajax({
-            url: 'https://app4881.acapp.acwing.com.cn/settings/login/',
-            type: 'GET',
+            url: 'https://app4881.acapp.acwing.com.cn/settings/api/token/',
+            type: 'post',
             data: {
                 username: username,
                 password: password,
             },
-            success: function(resp) {
-                if(resp.result === 'success') {
-                    location.reload();
-                }else{
-                    outer.$login_error_message.html(resp.result);
-                }
+            success: resp => {
+                this.root.access = resp.access;
+                this.root.refresh = resp.refresh;
+                this.refresh_jwt_token();
+                this.getinfo_web();
+            },
+            error: () => {
+                this.$login_error_message.html("username or password is wrong");
             }
         });
     }
@@ -1345,15 +1379,9 @@ class MultiPlayerSocket {
         if(this.platform === 'ACAPP') {
             this.root.OS.api.window.close();
         }else{
-            $.ajax({
-                url: 'https://app4881.acapp.acwing.com.cn/settings/logout/',
-                type: 'GET',
-                success: function(resp) {
-                    if(resp.result === 'success') {
-                        location.reload();
-                    }
-                }
-            });
+            this.root.access = "";
+            this.root.refresh = "";
+            location.href = "/";
         }
     }
 
@@ -1366,7 +1394,7 @@ class MultiPlayerSocket {
 
         $.ajax({
             url: 'https://app4881.acapp.acwing.com.cn/settings/register/',
-            type: 'GET',
+            type: 'post',
             data: {
                 username: username,
                 password: password,
@@ -1374,7 +1402,7 @@ class MultiPlayerSocket {
             },
             success: function(resp) {
                 if(resp.result === 'success') {
-                    location.reload();
+                    outer.login_remote(username, password);
                 }else{
                     outer.$register_error_message.html(resp.result);
                 }
@@ -1402,6 +1430,9 @@ class MultiPlayerSocket {
                 outer.photo = resp.photo;
                 outer.hide();
                 outer.root.menu.show();
+                outer.root.access = resp.access;
+                outer.root.refresh = resp.refresh;
+                outer.refresh_jwt_token();
             }
         });
     }
@@ -1424,12 +1455,16 @@ class MultiPlayerSocket {
         let outer = this;
         $.ajax({
             url: 'https://app4881.acapp.acwing.com.cn/settings/getinfo/',
-            type: 'GET',
+            type: 'get',
             data: {
                 platform: outer.platform,
             },
+            headers:{
+                'Authorization': 'Bearer ' + this.root.access,
+            },
             success: function(resp) {
                 if(resp.result === 'success') {
+                    console.log(resp);
                     outer.username = resp.username;
                     outer.photo = resp.photo;
                     outer.hide();
@@ -1449,11 +1484,12 @@ class MultiPlayerSocket {
         this.$settings.show();
     }
 }export class AcGame {
-    constructor(id, OS) {
+    constructor(id, OS, access, refresh) {
         this.id = id;
         this.$ac_game = $('#' + id);
         this.OS = OS;
-
+        this.access = access;
+        this.refresh = refresh;
         this.settings = new Settings(this);
         this.menu = new AcGameMenu(this);
         this.playground = new AcGamePlayground(this);
